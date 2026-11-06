@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Link Guard | URL Fraud Detection</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%;font-family:'Inter',sans-serif;font-size:14px}
+body{
+  --bg:#0f1117;--bg2:#161b27;--bg3:#1c2235;--card:#1a1f2e;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#dce4f5;--text2:#7889b0;--text3:#3d4d6e;
+  --blue:#4a7cdc;--blue2:#6b96ff;--blue-bg:rgba(74,124,220,0.1);--blue-text:#7fa0ff;
+  --red:#e0495e;--red-bg:rgba(224,73,94,0.1);--red-text:#f0778a;
+  --green:#00c47e;--green-bg:rgba(0,196,126,0.1);--green-text:#00e090;
+  --yellow:#e8a020;--yellow-bg:rgba(232,160,32,0.1);--yellow-text:#f0b84a;
+  --nav:rgba(15,17,23,0.92);
+}
+body.light{
+  --bg:#f4f6fb;--bg2:#ffffff;--bg3:#edf0f8;--card:#ffffff;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --text:#0d1020;--text2:#4a5470;--text3:#8a95b0;
+  --blue:#1a55ee;--blue-bg:#eef2ff;--blue-text:#1a45cc;
+  --red:#cc2c3c;--red-bg:#fff0f2;--red-text:#991f2e;
+  --green:#0a7a4e;--green-bg:#edfbf3;--green-text:#076039;
+  --yellow:#995f00;--yellow-bg:#fffbea;--yellow-text:#7a4a00;
+  --nav:rgba(244,246,251,0.92);
+}
+body{background:var(--bg);color:var(--text)}
+
+/* ── PROFESSIONAL BG ── */
+.bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.bg-base{position:absolute;inset:0;background:var(--bg)}
+.bg-accent{position:absolute;top:0;left:0;right:0;height:320px;background:linear-gradient(180deg,rgba(26,42,80,0.55) 0%,transparent 100%)}
+body.light .bg-accent{background:linear-gradient(180deg,rgba(200,215,255,0.35) 0%,transparent 100%)}
+.bg-line-h{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(74,124,220,0.18) 30%,rgba(74,124,220,0.18) 70%,transparent 100%)}
+.bg-line-h:nth-child(1){top:0}
+.bg-line-h:nth-child(2){top:88px;opacity:.5}
+.bg-line-h:nth-child(3){top:200px;opacity:.25}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;background:var(--nav);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;gap:14px}
+.nav-logo{font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:9px;margin-right:auto;letter-spacing:-0.3px}
+.nav-logo svg{width:20px;height:20px;stroke:var(--blue2);fill:none;stroke-width:2}
+.nav-logo-accent{color:var(--blue2)}
+.nav-tag{font-size:10px;background:var(--blue-bg);color:var(--blue-text);border:1px solid rgba(74,124,220,0.2);padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:0.4px}
+.nav-user{display:flex;align-items:center;gap:10px}
+.nav-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3568e8,#6b4de8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:1.5px solid rgba(255,255,255,0.1)}
+.nav-uname{font-size:13px;color:var(--text2)}
+.nav-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s}
+.nav-btn:hover{background:var(--bg3);color:var(--text)}
+.nav-btn.primary{background:linear-gradient(135deg,#2d5ccc,#5542d4);color:#fff;border-color:transparent;font-weight:600}
+.nav-btn.primary:hover{opacity:0.88}
+.nav-btn.accent{background:var(--blue-bg);color:var(--blue-text);border-color:rgba(74,124,220,0.2)}
+.nav-btn.accent:hover{background:var(--blue);color:#fff;border-color:transparent}
+.theme-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.theme-btn:hover{background:var(--border2)}
+.theme-btn svg{width:14px;height:14px;stroke:var(--text2);fill:none;stroke-width:2}
+
+/* ── PAGE SYSTEM ── */
+.page{display:none;position:relative;z-index:1;min-height:calc(100vh - 56px)}
+.page.active{display:block}
+
+/* ── AUTH ── */
+.auth-wrap{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:32px 16px}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:36px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
+body.light .auth-card{box-shadow:0 8px 40px rgba(0,0,0,0.07)}
+.auth-icon{width:44px;height:44px;border-radius:10px;background:var(--blue-bg);border:1px solid rgba(74,124,220,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.auth-icon svg{width:22px;height:22px;stroke:var(--blue2);fill:none;stroke-width:2}
+.auth-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-0.4px}
+.auth-sub{font-size:13px;color:var(--text3);margin-bottom:26px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px}
+.field input{width:100%;padding:10px 13px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:8px;color:var(--text);font-size:13.5px;font-family:'Inter',sans-serif;outline:none;transition:all 0.2s}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,124,220,0.1)}
+.field input::placeholder{color:var(--text3)}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:40px}
+.pw-toggle{position:absolute;top:0;right:0;bottom:0;width:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);background:none;border:none;padding:0}
+.pw-toggle:hover{color:var(--text2)}
+.pw-toggle svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
+.auth-btn{width:100%;padding:11px;background:linear-gradient(135deg,#2d5ccc,#5542d4);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;margin-top:4px;transition:all 0.2s;letter-spacing:0.2px}
+.auth-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(45,92,204,0.35)}
+.auth-btn:active{transform:translateY(0)}
+.auth-switch{text-align:center;margin-top:18px;font-size:13px;color:var(--text3)}
+.auth-switch a{color:var(--blue-text);cursor:pointer;font-weight:600}
+.auth-switch a:hover{text-decoration:underline}
+.auth-error{background:var(--red-bg);color:var(--red-text);border:1px solid rgba(224,73,94,0.2);border-radius:7px;padding:10px 13px;font-size:13px;margin-bottom:14px;display:none;align-items:center;gap:7px}
+.auth-error.show{display:flex}
+.auth-error svg{width:14px;height:14px;stroke:var(--red-text);fill:none;stroke-width:2.5;flex-shrink:0}
+.divider{text-align:center;margin:20px 0;position:relative;color:var(--text3);font-size:12px}
+.divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+.divider span{background:var(--card);padding:0 10px;position:relative}
+
+/* ── MAIN APP ── */
+.app-wrap{max-width:700px;margin:0 auto;padding:44px 20px 60px}
+.hero{text-align:center;margin-bottom:36px}
+.hero-eyebrow{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--blue-text);margin-bottom:12px;font-weight:600}
+.hero-title{font-size:32px;font-weight:700;color:var(--text);letter-spacing:-0.8px;line-height:1.2;margin-bottom:10px}
+.hero-title span{color:var(--blue2)}
+.hero-sub{font-size:14.5px;color:var(--text2);max-width:460px;margin:0 auto;line-height:1.65}
+
+/* ── SCAN BOX ── */
+.scan-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:26px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.22)}
+body.light .scan-box{box-shadow:0 4px 20px rgba(0,0,0,0.05)}
+.scan-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:10px}
+.scan-row{display:flex;gap:8px}
+.scan-input{flex:1;padding:11px 14px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:9px;color:var(--text);font-size:13px;font-family:'JetBrains Mono',monospace;outline:none;transition:all 0.2s;min-width:0}
+.scan-input:focus{border-color:var(--blue);background:var(--bg2);box-shadow:0 0 0 3px rgba(74,124,220,0.09)}
+.scan-input::placeholder{font-family:'Inter',sans-serif;color:var(--text3)}
+.scan-btn{padding:11px 22px;background:linear-gradient(135deg,#2d5ccc,#5542d4);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0}
+.scan-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(45,92,204,0.4)}
+.scan-btn:active{transform:translateY(0)}
+.scan-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
+.scan-hint{font-size:11.5px;color:var(--text3);margin-top:10px;display:flex;align-items:center;gap:5px}
+.scan-hint svg{width:12px;height:12px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0}
+
+/* ── RESULT ── */
+.result-box{margin-top:18px;border-radius:12px;border:1px solid;padding:22px;animation:fadeUp 0.3s cubic-bezier(0.22,1,0.36,1);display:none}
+.result-box.show{display:block}
+@keyframes fadeUp{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.result-box.safe{background:var(--green-bg);border-color:rgba(0,196,126,0.18)}
+.result-box.fraud{background:var(--red-bg);border-color:rgba(224,73,94,0.18)}
+.result-box.suspicious{background:var(--yellow-bg);border-color:rgba(232,160,32,0.18)}
+.result-header{display:flex;align-items:flex-start;gap:13px;margin-bottom:18px}
+.result-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.result-icon svg{width:22px;height:22px;stroke-width:2.2;fill:none}
+.result-icon.safe{background:rgba(0,196,126,0.12)}
+.result-icon.safe svg{stroke:var(--green-text)}
+.result-icon.fraud{background:rgba(224,73,94,0.12)}
+.result-icon.fraud svg{stroke:var(--red-text)}
+.result-icon.suspicious{background:rgba(232,160,32,0.12)}
+.result-icon.suspicious svg{stroke:var(--yellow-text)}
+.result-main{flex:1;min-width:0}
+.result-verdict{font-size:17px;font-weight:700;letter-spacing:-0.2px}
+.result-verdict.safe{color:var(--green-text)}
+.result-verdict.fraud{color:var(--red-text)}
+.result-verdict.suspicious{color:var(--yellow-text)}
+.result-url{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;word-break:break-all;margin-top:3px;line-height:1.5}
+.result-score-wrap{display:flex;align-items:center;gap:8px;margin-top:8px}
+.score-bar-bg{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,0.07)}
+body.light .score-bar-bg{background:rgba(0,0,0,0.07)}
+.score-bar-fill{height:100%;border-radius:99px;transition:width 0.7s cubic-bezier(0.22,1,0.36,1)}
+.score-bar-fill.safe{background:linear-gradient(90deg,#00a868,#00c47e)}
+.score-bar-fill.fraud{background:linear-gradient(90deg,#bb2230,#e0495e)}
+.score-bar-fill.suspicious{background:linear-gradient(90deg,#b07010,#e8a020)}
+.result-score-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;min-width:42px;text-align:right}
+.result-score-num.safe{color:var(--green-text)}
+.result-score-num.fraud{color:var(--red-text)}
+.result-score-num.suspicious{color:var(--yellow-text)}
+.signals-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:9px;text-transform:uppercase;letter-spacing:0.9px;margin-top:16px}
+.signals-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.signal-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;padding:8px 10px;border-radius:7px;background:rgba(0,0,0,0.12)}
+body.light .signal-item{background:rgba(0,0,0,0.04)}
+.signal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.signal-dot.bad{background:var(--red)}
+.signal-dot.good{background:var(--green)}
+.signal-dot.warn{background:var(--yellow)}
+.signal-text{color:var(--text2);flex:1;line-height:1.5}
+
+/* ── HISTORY ── */
+.history-section{margin-top:28px}
+.section-header{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.clear-btn{font-size:12px;color:var(--text3);cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;padding:3px 7px;border-radius:5px;transition:all 0.15s}
+.clear-btn:hover{color:var(--red-text);background:var(--red-bg)}
+.history-list{display:flex;flex-direction:column;gap:6px}
+.history-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all 0.15s}
+.history-item:hover{border-color:var(--border2);transform:translateX(2px)}
+.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.hist-dot.safe{background:var(--green)}
+.hist-dot.fraud{background:var(--red)}
+.hist-dot.suspicious{background:var(--yellow)}
+.hist-url{flex:1;font-size:11.5px;font-family:'JetBrains Mono',monospace;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-badge{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;font-weight:600;letter-spacing:0.2px;flex-shrink:0}
+.hist-badge.safe{background:var(--green-bg);color:var(--green-text);border:1px solid rgba(0,196,126,0.18)}
+.hist-badge.fraud{background:var(--red-bg);color:var(--red-text);border:1px solid rgba(224,73,94,0.18)}
+.hist-badge.suspicious{background:var(--yellow-bg);color:var(--yellow-text);border:1px solid rgba(232,160,32,0.18)}
+.hist-time{font-size:11px;color:var(--text3);flex-shrink:0}
+.hist-score{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);flex-shrink:0}
+
+/* ── STATS MINI ── */
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:22px}
+.mini-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center;position:relative;overflow:hidden}
+.mini-stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.mini-stat.blue::after{background:var(--blue)}
+.mini-stat.green::after{background:var(--green)}
+.mini-stat.red::after{background:var(--red)}
+.mini-stat-val{font-size:24px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-0.5px}
+.mini-stat-lbl{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.7px}
+
+/* ── ADMIN ── */
+.admin-wrap{max-width:780px;margin:0 auto;padding:32px 20px 60px}
+.admin-header{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+.admin-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.4px}
+.admin-badge{font-size:11px;background:var(--blue-bg);color:var(--blue-text);border:1px solid rgba(74,124,220,0.2);padding:3px 10px;border-radius:4px;font-weight:700;letter-spacing:0.4px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--stat-color,var(--blue))}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px;font-weight:600}
+.stat-value{font-size:26px;font-weight:700;color:var(--text);letter-spacing:-0.5px}
+.stat-value.red{color:var(--red-text)}
+.stat-value.green{color:var(--green-text)}
+.users-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+body.light .users-table-wrap{box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+.table-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.table-head-title{font-size:14px;font-weight:700;color:var(--text)}
+.table-search{padding:6px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:'Inter',sans-serif;outline:none;width:190px}
+.table-search:focus{border-color:var(--blue)}
+.table-search::placeholder{color:var(--text3)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:9px 20px;text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px;border-bottom:1px solid var(--border);white-space:nowrap;font-weight:600}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg3)}
+tbody td{padding:12px 20px;font-size:13px;color:var(--text2)}
+.user-role-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:0.2px}
+.user-role-badge.admin{background:var(--blue-bg);color:var(--blue-text);border:1px solid rgba(74,124,220,0.2)}
+.user-role-badge.user{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.del-btn{font-size:11px;padding:3px 9px;border-radius:5px;border:1px solid rgba(224,73,94,0.22);background:var(--red-bg);color:var(--red-text);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;font-weight:600}
+.del-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.action-btns{display:flex;gap:5px;align-items:center}
+.promo-btn{font-size:11px;padding:3px 9px;border-radius:5px;border:1px solid rgba(74,124,220,0.22);background:var(--blue-bg);color:var(--blue-text);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;font-weight:600}
+.promo-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.scan-history-section{margin-top:24px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.scan-history-head{padding:14px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.scan-entry{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)}
+.scan-entry:last-child{border-bottom:none}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.18s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:26px;max-width:400px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.4);transform:scale(0.96) translateY(8px);transition:all 0.22s cubic-bezier(0.22,1,0.36,1)}
+.modal-overlay.show .modal{transform:scale(1) translateY(0)}
+.modal-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:7px}
+.modal-body{font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.6}
+.modal-actions{display:flex;gap:9px;justify-content:flex-end}
+.modal-cancel{padding:8px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s}
+.modal-cancel:hover{background:var(--border2)}
+.modal-confirm{padding:8px 16px;background:linear-gradient(135deg,#bb2230,#e0495e);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s}
+.modal-confirm:hover{opacity:0.88}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--text);opacity:0;transition:all 0.25s cubic-bezier(0.22,1,0.36,1);pointer-events:none;z-index:999;white-space:nowrap;display:flex;align-items:center;gap:8px;box-shadow:0 6px 24px rgba(0,0,0,0.35)}
+body.light #toast{box-shadow:0 4px 16px rgba(0,0,0,0.1)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast svg{width:14px;height:14px;stroke-width:2.5;flex-shrink:0;fill:none}
+#toast.ok svg{stroke:var(--green)}
+#toast.err svg{stroke:var(--red)}
+#toast.info svg{stroke:var(--blue-text)}
+
+/* ── LOADING ── */
+.loader{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.65s linear infinite;vertical-align:-2px;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.db-pill{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600;display:inline-flex;align-items:center;gap:4px;background:var(--green-bg);color:var(--green-text);border:1px solid rgba(0,196,126,0.18)}
+.db-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+@media(max-width:600px){
+  .scan-row{flex-direction:column}
+  .signals-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .mini-stats{grid-template-columns:1fr}
+  .hero-title{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="bg-base"></div>
+  <div class="bg-accent"></div>
+  <div class="bg-line-h"></div>
+  <div class="bg-line-h"></div>
+  <div class="bg-line-h"></div>
+</div>
+
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Link<span class="nav-logo-accent">Guard</span>
+    <span class="nav-tag">v2.0</span>
+  </div>
+  <div id="nav-user" style="display:none" class="nav-user">
+    <div class="nav-avatar" id="nav-initials">?</div>
+    <span id="nav-name" class="nav-uname"></span>
+    <button class="nav-btn accent" id="nav-admin-btn" style="display:none" onclick="showPage('admin')">Admin</button>
+    <button class="nav-btn" onclick="doLogout()">Sign out</button>
+  </div>
+  <div id="nav-guest" class="nav-user">
+    <button class="nav-btn" onclick="showPage('login')">Sign in</button>
+    <button class="nav-btn primary" onclick="showPage('signup')">Get started</button>
+  </div>
+  <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+    <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  </button>
+</nav>
+
+<!-- LOGIN PAGE -->
+<div class="page active" id="page-login">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Sign in to your LinkGuard account</div>
+      <div class="auth-error" id="login-error"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span></span></div>
+      <div class="field"><label>Username</label><input type="text" id="login-user" placeholder="Enter your username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="login-pass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+          <button type="button" class="pw-toggle" onclick="togglePw('login-pass',this)" aria-label="Show password" tabindex="-1">
+            <svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.6 21.6 0 015.06-6.06M9.9 4.24A10.4 10.4 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-2.61 3.81M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="auth-btn" onclick="doLogin()">Sign in →</button>
+      <div class="divider"><span>or</span></div>
+      <div class="auth-switch">New to LinkGuard? <a onclick="showPage('signup')">Create a free account</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNUP PAGE -->
+<div class="page" id="page-signup">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+      <div class="auth-title">Create account</div>
+      <div class="auth-sub">Join LinkGuard — free URL fraud detection</div>
+      <div class="auth-error" id="signup-error"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span></span></div>
+      <div class="field"><label>Full name</label><input type="text" id="signup-name" placeholder="e.g. Priya Sharma" onkeydown="if(event.key==='Enter')doSignup()"></div>
+      <div class="field"><label>Username</label><input type="text" id="signup-user" placeholder="Choose a username" onkeydown="if(event.key==='Enter')doSignup()"></div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="signup-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')doSignup()">
+          <button type="button" class="pw-toggle" onclick="togglePw('signup-pass',this)" aria-label="Show password" tabindex="-1">
+            <svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.6 21.6 0 015.06-6.06M9.9 4.24A10.4 10.4 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-2.61 3.81M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <div class="pw-wrap">
+          <input type="password" id="signup-pass2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSignup()">
+          <button type="button" class="pw-toggle" onclick="togglePw('signup-pass2',this)" aria-label="Show password" tabindex="-1">
+            <svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.6 21.6 0 015.06-6.06M9.9 4.24A10.4 10.4 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-2.61 3.81M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="auth-btn" onclick="doSignup()">Create account →</button>
+      <div class="auth-switch">Already have an account? <a onclick="showPage('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP PAGE -->
+<div class="page" id="page-app">
+  <div class="app-wrap">
+    <div class="hero">
+      <div class="hero-eyebrow">AI-Powered Detection Engine</div>
+      <div class="hero-title">Detect <span>phishing & fraud</span><br>before you click</div>
+      <div class="hero-sub">Paste any link to instantly analyse it for scams, typosquatting, malicious patterns and more — powered by 14 detection signals.</div>
+    </div>
+
+    <div class="mini-stats" id="mini-stats" style="display:none">
+      <div class="mini-stat blue"><div class="mini-stat-val" id="ms-total">0</div><div class="mini-stat-lbl">URLs scanned</div></div>
+      <div class="mini-stat green"><div class="mini-stat-val" id="ms-safe">0</div><div class="mini-stat-lbl">Safe detected</div></div>
+      <div class="mini-stat red"><div class="mini-stat-val" id="ms-fraud">0</div><div class="mini-stat-lbl">Threats found</div></div>
+    </div>
+
+    <div class="scan-box">
+      <div class="scan-label">Enter URL to scan</div>
+      <div class="scan-row">
+        <input class="scan-input" type="text" id="url-input" placeholder="https://example.com/path?param=value" onkeydown="if(event.key==='Enter')scanURL()">
+        <button class="scan-btn" id="scan-btn" onclick="scanURL()">Analyse URL</button>
+      </div>
+      <div class="scan-hint">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        Supports http, https, or bare domains. Click a past scan below to re-analyse it.
+      </div>
+      <div id="result-box" class="result-box">
+        <div class="result-header">
+          <div class="result-icon" id="res-icon"><svg id="res-icon-svg" viewBox="0 0 24 24"></svg></div>
+          <div class="result-main">
+            <div class="result-verdict" id="res-verdict"></div>
+            <div class="result-url" id="res-url"></div>
+            <div class="result-score-wrap">
+              <div class="score-bar-bg"><div class="score-bar-fill" id="res-bar"></div></div>
+              <div class="result-score-num" id="res-score"></div>
+            </div>
+          </div>
+        </div>
+        <div class="signals-title">Detection signals</div>
+        <div class="signals-grid" id="res-signals"></div>
+      </div>
+    </div>
+
+    <div class="history-section" id="history-section" style="display:none">
+      <div class="section-header">Recent scans <button class="clear-btn" onclick="confirmClearHistory()">Clear all</button></div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div class="page" id="page-admin">
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <div class="admin-title">Admin Panel</div>
+      <span class="admin-badge">Superuser</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <span class="db-pill" id="db-status"><span class="db-dot"></span>DB connected</span>
+        <button class="nav-btn" onclick="showPage('app')">← Back to app</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card" style="--stat-color:var(--blue)"><div class="stat-label">Total users</div><div class="stat-value" id="stat-total">—</div></div>
+      <div class="stat-card" style="--stat-color:var(--green)"><div class="stat-label">Total scans</div><div class="stat-value green" id="stat-scans">—</div></div>
+      <div class="stat-card" style="--stat-color:var(--red)"><div class="stat-label">Threats flagged</div><div class="stat-value red" id="stat-fraud">—</div></div>
+      <div class="stat-card" style="--stat-color:var(--yellow)"><div class="stat-label">Suspicious</div><div class="stat-value" style="color:var(--yellow-text)" id="stat-suspicious">—</div></div>
+    </div>
+    <div class="users-table-wrap">
+      <div class="table-head">
+        <div class="table-head-title">Registered users</div>
+        <input class="table-search" type="text" placeholder="Search users…" oninput="filterUsers(this.value)">
+      </div>
+      <table>
+        <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Scans</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="admin-users-body"></tbody>
+      </table>
+    </div>
+    <div class="scan-history-section">
+      <div class="scan-history-head">Global scan history <span style="font-size:12px;color:var(--text3);font-weight:400" id="scan-count-label">0 total</span></div>
+      <div id="admin-scan-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Confirm action</div>
+    <div class="modal-body" id="modal-body">Are you sure?</div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" id="modal-confirm-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">
+  <svg viewBox="0 0 24 24" id="toast-svg"></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+const MEM={};
+function sget(k){try{var v=localStorage.getItem(k);if(v!==null)return v}catch(e){}return MEM[k]===undefined?null:MEM[k]}
+function sset(k,v){MEM[k]=v;try{localStorage.setItem(k,v)}catch(e){}}
+const DB={
+  async getUsers(){try{const r=sget('lg_users');return r?JSON.parse(r):[]}catch(e){return[]}},
+  async setUsers(u){sset('lg_users',JSON.stringify(u))},
+  async getHistory(){try{const r=sget('lg_history');return r?JSON.parse(r):[]}catch(e){return[]}},
+  async setHistory(h){sset('lg_history',JSON.stringify(h))},
+  async getScans(){try{const r=sget('lg_scans');return r?JSON.parse(r):[]}catch(e){return[]}},
+  async setScans(s){sset('lg_scans',JSON.stringify(s))},
+  getSession(){try{return JSON.parse(sessionStorage.getItem('lg_session'))}catch(e){return MEM.sess||null}},
+  setSession(u){MEM.sess=u;try{sessionStorage.setItem('lg_session',JSON.stringify(u))}catch(e){}},
+  clearSession(){MEM.sess=null;try{sessionStorage.removeItem('lg_session')}catch(e){}}
+};
+
+async function boot(){
+  let users=await DB.getUsers();
+  if(!users.find(u=>u.username==='akshatha')){
+    users.unshift({id:'usr_admin',name:'Akshatha',username:'akshatha',password:'admin123',role:'admin',joined:new Date().toLocaleDateString('en-IN'),scans:0});
+    await DB.setUsers(users);
+  }
+  const sess=DB.getSession();
+  if(sess){const fresh=users.find(u=>u.username===sess.username);if(fresh){afterLogin(fresh);return;}}
+}
+
+async function doLogin(){
+  const u=val('login-user'),p=val('login-pass');
+  const err=ge('login-error');
+  if(!u||!p){showAuthErr(err,'Please fill all fields.');return;}
+  const users=await DB.getUsers();
+  const found=users.find(x=>x.username.toLowerCase()===u.toLowerCase()&&x.password===p);
+  if(!found){showAuthErr(err,'Incorrect username or password.');return;}
+  hideErr(err);DB.setSession(found);afterLogin(found);
+}
+
+async function doSignup(){
+  const name=val('signup-name'),u=val('signup-user'),p=val('signup-pass'),p2=val('signup-pass2');
+  const err=ge('signup-error');
+  if(!name||!u||!p||!p2){showAuthErr(err,'Please fill all fields.');return;}
+  if(p.length<6){showAuthErr(err,'Password must be at least 6 characters.');return;}
+  if(p!==p2){showAuthErr(err,'Passwords do not match.');return;}
+  const users=await DB.getUsers();
+  if(users.find(x=>x.username.toLowerCase()===u.toLowerCase())){showAuthErr(err,'Username already taken.');return;}
+  const newUser={id:'usr_'+Date.now(),name,username:u,password:p,role:'user',joined:new Date().toLocaleDateString('en-IN'),scans:0};
+  users.push(newUser);await DB.setUsers(users);hideErr(err);DB.setSession(newUser);afterLogin(newUser);showToast('Welcome, '+name+'!','ok');
+}
+
+function afterLogin(u){
+  ge('nav-guest').style.display='none';ge('nav-user').style.display='flex';
+  ge('nav-name').textContent=u.name;
+  ge('nav-initials').textContent=u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  if(u.role==='admin')ge('nav-admin-btn').style.display='inline-flex';
+  showPage('app');
+}
+
+async function doLogout(){
+  DB.clearSession();ge('nav-guest').style.display='flex';ge('nav-user').style.display='none';ge('nav-admin-btn').style.display='none';
+  ge('login-user').value='';ge('login-pass').value='';showPage('login');showToast('Signed out','ok');
+}
+
+function showAuthErr(el,msg){el.querySelector('span').textContent=msg;el.classList.add('show');}
+function hideErr(el){el.classList.remove('show');}
+
+const eyeOpenPath='<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+const eyeClosedPath='<path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.6 21.6 0 015.06-6.06M9.9 4.24A10.4 10.4 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-2.61 3.81M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+function togglePw(inputId,btn){
+  const input=ge(inputId);
+  const willReveal=input.type==='password'; // currently hidden -> click reveals it
+  input.type=willReveal?'text':'password';
+  // icon reflects the NEW state: open eye = password now visible, closed eye = password now hidden
+  btn.innerHTML='<svg viewBox="0 0 24 24">'+(willReveal?eyeOpenPath:eyeClosedPath)+'</svg>';
+  btn.setAttribute('aria-label',willReveal?'Hide password':'Show password');
+}
+
+// ─── IMPROVED DETECTION ENGINE ───
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  const dp=[];
+  for(let i=0;i<=m;i++){dp[i]=[i];for(let j=1;j<=n;j++)dp[i][j]=0;}
+  for(let j=0;j<=n;j++)dp[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function getDomain(url){
+  try{return new URL(url.startsWith('http')?url:'https://'+url).hostname.replace(/^www\./,'');}
+  catch{return url;}
+}
+
+function normalizeLeet(s){
+  return s.replace(/0/g,'o').replace(/1/g,'l').replace(/3/g,'e').replace(/4/g,'a').replace(/5/g,'s').replace(/7/g,'t').replace(/\$/g,'s');
+}
+
+function analyseURL(rawUrl){
+  let score=0;const signals=[];
+  const url=rawUrl.startsWith('http')?rawUrl:'https://'+rawUrl;
+  const lower=url.toLowerCase();
+  const domain=getDomain(url);
+  const domainLower=domain.toLowerCase();
+  const registrable=domainLower.split('.').slice(-2).join('.');
+  const subdomain=domainLower.split('.').slice(0,-2).join('.');
+  const tld='.'+domainLower.split('.').pop();
+
+  // ── 1. Known-safe exact match (strong negative)
+  const knownSafe=['google.com','github.com','wikipedia.org','stackoverflow.com','youtube.com',
+    'microsoft.com','apple.com','amazon.com','linkedin.com','twitter.com','instagram.com',
+    'facebook.com','netflix.com','reddit.com','openai.com','anthropic.com','x.com',
+    'cloudflare.com','notion.so','vercel.app','netlify.app','npmjs.com','pypi.org'];
+  const isExactSafe=knownSafe.some(d=>domainLower===d||domainLower.endsWith('.'+d));
+  if(isExactSafe){signals.push({text:'Verified trusted domain',type:'good'});score-=40;}
+
+  // ── 2. Brand impersonation / typosquat (very heavy penalty)
+  const brands=['google','github','paypal','apple','amazon','microsoft','facebook',
+    'netflix','instagram','twitter','linkedin','youtube','whatsapp','dropbox','ebay',
+    'bankofamerica','chase','wellsfargo','citibank','hsbc','paytm','flipkart','zomato',
+    'hdfc','icici','sbi','airtel','jio','swiggy','myntra'];
+
+  if(!isExactSafe){
+    const regPart=registrable.split('.')[0];
+    const regPartNorm=normalizeLeet(regPart);
+    const tokens=regPart.split(/[-_]/).filter(Boolean);
+    const tokensNorm=tokens.map(normalizeLeet);
+    let brandHit=false;
+
+    brandLoop:
+    for(const brand of brands){
+      if(regPart===brand){break;} // exact match — not impersonation, and no other brand can match either
+
+      // Substring match — raw OR leetspeak-normalized (catches "amaz0n-secure", "faceb00k-login" etc, even with a suffix attached)
+      if(regPart.includes(brand)||regPartNorm.includes(brand)){
+        score+=65;signals.push({text:`Impersonates "${brand}" in domain`,type:'bad'});brandHit=true;break brandLoop;
+      }
+
+      // Typosquat on the whole domain label (short 1-2 char difference).
+      // Very short brand names (e.g. "sbi","jio") are skipped here — with only
+      // 3-4 letters, an edit-distance-2 match is too loose and hits unrelated words.
+      const maxDist=brand.length<=3?0:brand.length<=5?1:2;
+      if(maxDist>0&&regPart.length>=brand.length-maxDist&&regPart.length<=brand.length+maxDist&&levenshtein(regPartNorm,brand)<=maxDist){
+        score+=60;signals.push({text:`Looks like "${brand}" — likely typosquat`,type:'bad'});brandHit=true;break brandLoop;
+      }
+
+      // Typosquat on an individual hyphenated token (e.g. "paypall-team.com", "goggle-support.net")
+      if(maxDist>0){
+        for(let i=0;i<tokens.length;i++){
+          const tok=tokens[i],tokNorm=tokensNorm[i];
+          if(tok.length<4)continue;
+          if(tok.length>=brand.length-maxDist&&tok.length<=brand.length+maxDist){
+            const dist=Math.min(levenshtein(tok,brand),levenshtein(tokNorm,brand));
+            if(dist<=maxDist&&dist>0){
+              score+=60;signals.push({text:`"${tok}" looks like "${brand}" — likely typosquat`,type:'bad'});brandHit=true;break brandLoop;
+            }
+          }
+        }
+      }
+
+      // Brand appears only in path/query, not in domain at all
+      if(!registrable.includes(brand)&&lower.includes(brand)){
+        score+=30;signals.push({text:`"${brand}" used in URL path`,type:'warn'});brandHit=true;break brandLoop;
+      }
+    }
+    if(!brandHit)signals.push({text:'No brand impersonation detected',type:'good'});
+  }
+
+  // ── 3. HTTPS check
+  const urlProto=rawUrl.startsWith('http://')?'http':'https';
+  if(urlProto==='http'){score+=22;signals.push({text:'Unencrypted HTTP — no HTTPS',type:'bad'});}
+  else signals.push({text:'HTTPS secure connection',type:'good'});
+
+  // ── 4. High-risk TLDs
+  const fraudTLDs=['.xyz','.tk','.ml','.ga','.cf','.gq','.top','.click','.work','.loan',
+    '.buzz','.live','.site','.online','.win','.club','.bid','.info','.biz','.cc','.pw',
+    '.icu','.monster','.cyou','.sbs','.digital','.shop','.store','.rest','.fun','.link',
+    '.support','.stream','.download','.racing','.review'];
+  if(fraudTLDs.includes(tld)){score+=38;signals.push({text:'High-risk TLD: '+tld,type:'bad'});}
+
+  // ── 5. Excessive / suspicious subdomains
+  const parts=domainLower.split('.');
+  if(parts.length>3){score+=20;signals.push({text:`${parts.length-2} subdomain levels`,type:'bad'});}
+  else if(parts.length===3&&parts[0]!=='www'){
+    // a single non-www subdomain is common but worth a small flag, especially
+    // when it's being used to fake a well-known brand ahead of the real domain
+    const subBrandHit=brands.find(b=>parts[0]===b||parts[0].includes(b));
+    if(subBrandHit){score+=45;signals.push({text:`"${subBrandHit}" used as fake subdomain`,type:'bad'});}
+    else{score+=6;signals.push({text:'Uses a subdomain: '+parts[0],type:'warn'});}
+  }
+
+  // ── 6. Raw IP
+  if(/^\d{1,3}(\.\d{1,3}){3}$/.test(domain)){score+=50;signals.push({text:'Raw IP address — no domain name',type:'bad'});}
+
+  // ── 7. Phishing keyword density
+  const phishKw=['login','verify','account','update','secure','confirm','password',
+    'billing','suspend','alert','unlock','recover','signin','support','helpdesk',
+    'service','bank','wallet','kyc','otp','transaction','validate','credential',
+    'urgent','verify-now','click-here','free','prize','winner','claim',
+    'phishing','phish','scam','fraud','fake','malware','virus','hack','hacked',
+    'compromised','limited','restricted','reactivate','deactivated'];
+  const kwHit=phishKw.filter(k=>lower.includes(k));
+  const dangerKw=['phishing','phish','scam','fraud','fake','malware','virus','hack','hacked'];
+  const dangerHit=kwHit.filter(k=>dangerKw.includes(k));
+  if(dangerHit.length){score+=55;signals.push({text:'Explicit threat keyword: '+dangerHit.slice(0,2).join(', '),type:'bad'});}
+  else if(kwHit.length>=3){score+=35;signals.push({text:'Multiple phishing keywords: '+kwHit.slice(0,3).join(', '),type:'bad'});}
+  else if(kwHit.length===2){score+=22;signals.push({text:'Phishing keywords: '+kwHit.join(', '),type:'bad'});}
+  else if(kwHit.length===1){score+=10;signals.push({text:'Keyword in URL: "'+kwHit[0]+'"',type:'warn'});}
+  else signals.push({text:'No phishing keywords found',type:'good'});
+
+  // ── 8. @ trick
+  if(url.includes('@')){score+=42;signals.push({text:'@ symbol — redirect deception trick',type:'bad'});}
+
+  // ── 9. URL shorteners
+  const shorteners=['bit.ly','tinyurl.com','t.co','goo.gl','ow.ly','buff.ly','is.gd','rb.gy','cutt.ly','short.io'];
+  if(shorteners.some(s=>domainLower===s)){score+=24;signals.push({text:'URL shortener hides real destination',type:'warn'});}
+
+  // ── 10. Punycode / homoglyphs
+  if(/xn--/.test(domain)){score+=36;signals.push({text:'Punycode — homoglyph spoofing attack',type:'bad'});}
+
+  // ── 11. Excessively long domain
+  if(domain.length>50){score+=15;signals.push({text:'Abnormally long domain name',type:'warn'});}
+
+  // ── 12. Excessive hyphens (e.g. my-bank-login-secure.com)
+  const hyphenCount=(registrable.match(/-/g)||[]).length;
+  if(hyphenCount>=2){score+=18;signals.push({text:`${hyphenCount} hyphens in domain — suspicious pattern`,type:'bad'});}
+  else if(hyphenCount===1){score+=8;signals.push({text:'Hyphen in domain name',type:'warn'});}
+
+  // ── 13. Numeric substitution (paypa1, g00gle)
+  if(!isExactSafe&&/[0-9]/.test(registrable.split('.')[0])){
+    score+=14;signals.push({text:'Digits in domain — possible character substitution',type:'warn'});
+  }
+
+  // ── 14. Deceptive path patterns
+  const deepPaths=['/free/','/win/','/prize/','/claim/','/gift/','/bonus/','/reward/','/verify/','/secure/','/update/'];
+  if(deepPaths.some(p=>lower.includes(p))){score+=20;signals.push({text:'Deceptive path pattern detected',type:'bad'});}
+
+  score=Math.max(0,Math.min(100,score));
+  return{score,signals:signals.slice(0,8)};
+}
+
+async function scanURL(){
+  const raw=val('url-input');
+  if(!raw){showToast('Please enter a URL first','err');return;}
+  const btn=ge('scan-btn');
+  btn.disabled=true;btn.innerHTML='<span class="loader"></span>Analysing…';
+  setTimeout(async()=>{
+    btn.disabled=false;btn.innerHTML='Analyse URL';
+    const url=raw.startsWith('http')?raw:'https://'+raw;
+    const{score,signals}=analyseURL(raw);
+    const verdict=score>=55?'fraud':score>=25?'suspicious':'safe';
+    showResult(url,score,verdict,signals);
+    const sess=DB.getSession();
+    if(sess){
+      await saveToHistory(url,score,verdict,sess.username);
+      const users=await DB.getUsers();
+      const idx=users.findIndex(u=>u.username===sess.username);
+      if(idx>-1){users[idx].scans=(users[idx].scans||0)+1;await DB.setUsers(users);}
+      renderHistory();updateMiniStats();
+    }
+  },800);
+}
+
+function showResult(url,score,verdict,signals){
+  const box=ge('result-box');
+  const icons={
+    safe:'<polyline points="20 6 9 17 4 12"/>',
+    fraud:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+    suspicious:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+  };
+  const labels={safe:'Safe — No threats detected',fraud:'Fraud / Phishing URL',suspicious:'Suspicious — Proceed with caution'};
+  ge('res-icon').className='result-icon '+verdict;
+  ge('res-icon-svg').innerHTML=icons[verdict];
+  ge('res-verdict').className='result-verdict '+verdict;
+  ge('res-verdict').textContent=labels[verdict];
+  ge('res-url').textContent=url;
+  ge('res-score').className='result-score-num '+verdict;
+  ge('res-score').textContent='Risk: '+score+'/100';
+  const bar=ge('res-bar');
+  bar.className='score-bar-fill '+verdict;
+  bar.style.width='0%';
+  setTimeout(()=>{bar.style.width=score+'%';},50);
+  ge('res-signals').innerHTML=signals.map(s=>`
+    <div class="signal-item">
+      <span class="signal-dot ${s.type}"></span>
+      <span class="signal-text">${s.text}</span>
+    </div>`).join('');
+  box.className='result-box show '+verdict;
+}
+
+async function saveToHistory(url,score,verdict,username){
+  const h=await DB.getHistory();const scans=await DB.getScans();
+  const entry={id:'sc_'+Date.now(),url,score,verdict,username,
+    time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    date:new Date().toLocaleDateString('en-IN')};
+  h.unshift(entry);scans.unshift(entry);
+  await DB.setHistory(h.slice(0,50));await DB.setScans(scans.slice(0,200));
+}
+
+async function renderHistory(){
+  const sess=DB.getSession();if(!sess)return;
+  const h=await DB.getHistory();const mine=h.filter(x=>x.username===sess.username);
+  const sec=ge('history-section'),list=ge('history-list');
+  if(!mine.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  list.innerHTML=mine.slice(0,10).map(item=>`
+    <div class="history-item" onclick="reloadScan('${item.url.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <span class="hist-dot ${item.verdict}"></span>
+      <span class="hist-url">${escHtml(item.url)}</span>
+      <span class="hist-badge ${item.verdict}">${item.verdict}</span>
+      <span class="hist-score">${item.score}/100</span>
+      <span class="hist-time">${item.time}</span>
+    </div>`).join('');
+}
+
+async function updateMiniStats(){
+  const sess=DB.getSession();if(!sess)return;
+  const h=await DB.getHistory();const mine=h.filter(x=>x.username===sess.username);
+  if(!mine.length){ge('mini-stats').style.display='none';return;}
+  ge('mini-stats').style.display='grid';
+  ge('ms-total').textContent=mine.length;
+  ge('ms-safe').textContent=mine.filter(x=>x.verdict==='safe').length;
+  ge('ms-fraud').textContent=mine.filter(x=>x.verdict==='fraud').length;
+}
+
+function reloadScan(url){ge('url-input').value=url;scanURL();}
+
+function confirmClearHistory(){
+  showModal('Clear history','This will remove all your scan history. Cannot be undone.',async()=>{
+    const sess=DB.getSession();if(!sess)return;
+    let h=await DB.getHistory();h=h.filter(x=>x.username!==sess.username);
+    await DB.setHistory(h);renderHistory();updateMiniStats();showToast('History cleared','ok');closeModal();
+  },'Clear all','var(--red)');
+}
+
+let allUsers=[];
+async function renderAdmin(){
+  const users=await DB.getUsers();const scans=await DB.getScans();
+  allUsers=users;
+  ge('stat-total').textContent=users.filter(u=>u.role!=='admin').length;
+  ge('stat-scans').textContent=scans.length;
+  ge('stat-fraud').textContent=scans.filter(s=>s.verdict==='fraud').length;
+  ge('stat-suspicious').textContent=scans.filter(s=>s.verdict==='suspicious').length;
+  ge('scan-count-label').textContent=scans.length+' total';
+  renderUsersTable(users);renderAdminScans(scans);
+}
+
+function renderUsersTable(users){
+  if(!users.length){ge('admin-users-body').innerHTML=`<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text3)">No users found</td></tr>`;return;}
+  ge('admin-users-body').innerHTML=users.map(u=>`
+    <tr>
+      <td style="color:var(--text);font-weight:600">${escHtml(u.name)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue-text)">@${escHtml(u.username)}</td>
+      <td><span class="user-role-badge ${u.role}">${u.role}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${u.scans||0}</td>
+      <td>${u.joined}</td>
+      <td>${u.role!=='admin'?`<div class="action-btns"><button class="promo-btn" onclick="promoteUser('${u.username}')">Make admin</button><button class="del-btn" onclick="confirmDeleteUser('${u.username}','${escHtml(u.name)}')">Remove</button></div>`:'<span style="color:var(--text3);font-size:12px">Protected</span>'}</td>
+    </tr>`).join('');
+}
+
+function filterUsers(q){
+  if(!q.trim()){renderUsersTable(allUsers);return;}
+  renderUsersTable(allUsers.filter(u=>u.name.toLowerCase().includes(q.toLowerCase())||u.username.toLowerCase().includes(q.toLowerCase())));
+}
+
+function renderAdminScans(scans){
+  const el=ge('admin-scan-list');
+  if(!scans.length){el.innerHTML=`<div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">No scans recorded yet</div>`;return;}
+  el.innerHTML=scans.slice(0,20).map(s=>`
+    <div class="scan-entry">
+      <span class="hist-dot ${s.verdict}" style="flex-shrink:0"></span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.url)}</span>
+      <span class="hist-badge ${s.verdict}" style="flex-shrink:0">${s.verdict}</span>
+      <span style="font-size:11px;color:var(--text3);margin-left:8px;flex-shrink:0">@${escHtml(s.username||'?')}</span>
+      <span style="font-size:11px;color:var(--text3);margin-left:8px;flex-shrink:0">${s.date} ${s.time}</span>
+    </div>`).join('');
+}
+
+function confirmDeleteUser(username,name){
+  showModal('Remove user',`Remove <strong style="color:var(--text)">${name}</strong> (@${username})?`,async()=>{
+    let users=await DB.getUsers();users=users.filter(u=>u.username!==username);
+    await DB.setUsers(users);renderAdmin();showToast('User removed','ok');closeModal();
+  },'Remove','var(--red)');
+}
+
+async function promoteUser(username){
+  showModal('Promote user',`Give <strong style="color:var(--text)">@${username}</strong> admin privileges?`,async()=>{
+    let users=await DB.getUsers();const idx=users.findIndex(u=>u.username===username);
+    if(idx>-1){users[idx].role='admin';await DB.setUsers(users);}
+    renderAdmin();showToast(`@${username} promoted to admin`,'ok');closeModal();
+  },'Promote','var(--blue)');
+}
+
+let _modalCb=null;
+function showModal(title,body,onConfirm,confirmLabel='Confirm',confirmColor='var(--red)'){
+  ge('modal-title').textContent=title;ge('modal-body').innerHTML=body;
+  const btn=ge('modal-confirm-btn');btn.textContent=confirmLabel;
+  btn.style.background=`linear-gradient(135deg,${confirmColor},${confirmColor})`;
+  _modalCb=onConfirm;ge('confirm-modal').classList.add('show');
+}
+function closeModal(){ge('confirm-modal').classList.remove('show');_modalCb=null;}
+ge('confirm-modal').addEventListener('click',e=>{if(e.target===ge('confirm-modal'))closeModal();});
+ge('modal-confirm-btn').addEventListener('click',()=>{if(_modalCb)_modalCb();});
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  ge('page-'+id).classList.add('active');
+  if(id==='admin')renderAdmin();
+  if(id==='app'){renderHistory();updateMiniStats();}
+}
+
+const sunPath='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+const moonPath='<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const isLight=document.body.classList.contains('light');
+  ge('theme-icon').innerHTML=isLight?moonPath:sunPath;
+  try{localStorage.setItem('lg_theme',isLight?'light':'dark');}catch(e){}
+}
+(function initTheme(){
+  let t=null;try{t=localStorage.getItem('lg_theme');}catch(e){}
+  if(t==='light'){document.body.classList.add('light');ge('theme-icon').innerHTML=moonPath;}
+  else ge('theme-icon').innerHTML=sunPath;
+})();
+
+let toastT;
+function showToast(msg,type='ok'){
+  const t=ge('toast');ge('toast-msg').textContent=msg;t.className='show '+type;
+  const icons={ok:'<polyline points="20 6 9 17 4 12"/>',err:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>'};
+  ge('toast-svg').innerHTML=icons[type]||icons.ok;
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function ge(id){return document.getElementById(id);}
+function val(id){return ge(id).value.trim();}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+boot();
+</script>
+</body>
+</html>
